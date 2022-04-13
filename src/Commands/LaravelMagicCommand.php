@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Dominiquevienne\LaravelMagic\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelMagicCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-magic';
 
     public $description = 'My command';
 
