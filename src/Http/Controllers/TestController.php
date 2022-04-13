@@ -11,7 +11,7 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 
-class NodeController extends Controller
+class TestController extends Controller
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
