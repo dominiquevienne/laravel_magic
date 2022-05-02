@@ -5,6 +5,7 @@ namespace Dominiquevienne\LaravelMagic\Http\Controllers;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
 use Dominiquevienne\LaravelMagic\Exceptions\ControllerAutomationException;
 use Dominiquevienne\LaravelMagic\Http\Requests\BootstrapRequest;
@@ -25,6 +26,7 @@ class AbstractController extends Controller
 
     private const REGEX_CONTROLLER = '/Controller$/s';
     private const SORTING_KEY_DEFAULT = 'name';
+    private const PAGINATION_MAX_VALUE = 100;
 
     protected string $modelName;
     protected string $resourceKey;
@@ -110,12 +112,12 @@ class AbstractController extends Controller
     }
 
     /**
-     * @param AbstractModel|Collection $items
+     * @param AbstractModel|Collection|LengthAwarePaginator $items
      * @param array $meta
      * @return Response
      * @todo Implement metadata feature
      */
-    protected function sendResponse(AbstractModel|Collection $items, array $meta = []): Response
+    protected function sendResponse(AbstractModel|Collection|LengthAwarePaginator $items, array $meta = []): Response
     {
         $meta['http-status'] = $meta['http-status'] ?? 200;
         $meta['result'] = $meta['result'] ?? ($meta['http-status']===200);
@@ -134,7 +136,6 @@ class AbstractController extends Controller
      * Display a listing of the resource.
      * @param Request $request
      * @return Response
-     * @todo Truncate results for large datasets (implement pagination)
      * @todo Check if implementing a validation on $filters should be done (available properties for filtering based on fillable)
      *
      */
@@ -173,7 +174,7 @@ class AbstractController extends Controller
         if (!empty($this->sortingKey)) {
             $query = $query->orderBy(trim($this->sortingKey), $this->sortingDirection);
         }
-        $items = $query->get();
+        $items = $query->paginate(self::PAGINATION_MAX_VALUE);
 
         return $this->sendResponse($items);
     }
