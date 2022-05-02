@@ -141,6 +141,8 @@ class AbstractController extends Controller
      */
     public function index(Request $request): Response
     {
+        $fields = $request->get('fields');
+
         $filter = json_decode(
             urldecode(
                 $request->get('filter')
@@ -156,6 +158,11 @@ class AbstractController extends Controller
             $query = $query->published();
         }
         $query = $query->with($with);
+
+        if($fields) {
+            $fields = explode(',', $fields);
+            $query = $query->select($fields);
+        }
 
         if ($filter) {
             if ($filter->fields) {
@@ -182,6 +189,7 @@ class AbstractController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param Request $request
      * @param int $objectId
      * @return Response
      * @todo Implement rights management
@@ -195,10 +203,17 @@ class AbstractController extends Controller
         $with = $request->get('with');
         $with = $this->filterWith($with);
 
+        $fields = $request->get('fields');
+
         $query = $modelName::query();
         $query = $query->with($with);
         if ($this->usePublicationStatusTrait) {
             $query = $query->published();
+        }
+
+        if ($fields) {
+            $fields = explode(',', $fields);
+            $query = $query->select($fields);
         }
 
         try {
