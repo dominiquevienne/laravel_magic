@@ -344,10 +344,7 @@ class AbstractController extends Controller
     private function filterWith(?string $with): array
     {
         if ($with) {
-            $with = json_decode(urldecode($with)) ?? urldecode($with);
-            if (!is_array($with)) {
-                $with = [$with];
-            }
+            $with = explode(',', $with);
             /** @var AbstractModel $object */
             $object = new $this->modelName;
             foreach ($with as $key => $relationshipName) {
