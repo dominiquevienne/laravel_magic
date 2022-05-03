@@ -158,7 +158,11 @@ class AbstractController extends Controller
         if ($this->usePublicationStatusTrait) {
             $query = $query->published();
         }
-        $query = $query->with($with);
+        foreach ($with as $relationshipName) {
+            $query = $query->with([$relationshipName => function($query) {
+                $query->take(self::PAGINATION_MAX_VALUE);
+            }]);
+        }
 
         if($fields) {
             $query = $query->select($fields);
@@ -215,7 +219,11 @@ class AbstractController extends Controller
         $fields = $this->filterFields($fields);
 
         $query = $modelName::query();
-        $query = $query->with($with);
+        foreach ($with as $relationshipName) {
+            $query = $query->with([$relationshipName => function($query) {
+                $query->take(self::PAGINATION_MAX_VALUE);
+            }]);
+        }
         if ($this->usePublicationStatusTrait) {
             $query = $query->published();
         }
