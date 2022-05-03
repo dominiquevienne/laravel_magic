@@ -166,8 +166,16 @@ class AbstractController extends Controller
 
         if ($filter) {
             if ($filter->fields) {
-                foreach ($filter->fields as $field => $value) {
-                    $query = $query->where($field, 'LIKE', $value);
+                if (is_array($filter->fields)) {
+                    foreach ($filter->fields as $fieldEntity) {
+                        if ($this->filterFields($fieldEntity->field)) {
+                            $query = $query->where($fieldEntity->field, $fieldEntity->operator, $fieldEntity->value);
+                        }
+                    }
+                } elseif (is_object($filter->fields)) {
+                    foreach ($filter->fields as $field => $value) {
+                        $query = $query->where($field, 'LIKE', $value);
+                    }
                 }
             }
             if (property_exists($filter, 'order')) {
