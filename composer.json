@@ -1,6 +1,5 @@
 {
     "name": "dominiquevienne/laravel-magic",
-    "version": "1.0",
     "description": "Laravel helpers classes such as Controllers / Models / Requests",
     "keywords": [
         "dominiquevienne",
