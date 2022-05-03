@@ -1,20 +1,20 @@
 
-# Laravel helpers classes such as Controllers / Models / Requests
+# Laravel Magic
 
+![GitHub last commit](https://img.shields.io/github/last-commit/dominiquevienne/laravel_magic?style=flat-square)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/dominiquevienne/laravel-magic.svg?style=flat-square)](https://packagist.org/packages/dominiquevienne/laravel-magic)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/dominiquevienne/laravel-magic/run-tests?label=tests)](https://github.com/dominiquevienne/laravel-magic/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/dominiquevienne/laravel-magic/Check%20&%20fix%20styling?label=code%20style)](https://github.com/dominiquevienne/laravel-magic/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/dominiquevienne/laravel-magic.svg?style=flat-square)](https://packagist.org/packages/dominiquevienne/laravel-magic)
+![Packagist PHP Version Support](https://img.shields.io/packagist/php-v/dominiquevienne/laravel-magic?style=flat-square)
+![GitHub top language](https://img.shields.io/github/languages/top/dominiquevienne/laravel_magic?style=flat-square)
+![Packagist License](https://img.shields.io/packagist/l/dominiquevienne/laravel-magic?style=flat-square)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dominiquevienne/laravel_magic?style=flat-square)
+![GitHub all releases](https://img.shields.io/github/downloads/dominiquevienne/laravel_magic/total?style=flat-square)
+![Packagist Stars](https://img.shields.io/packagist/stars/dominiquevienne/laravel-magic?style=flat-square)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+Laravel Magic provides Abstract Controller, Model, generic Request, Traits, Exceptions and various middlewares in order to generate very easily and quickly API resources from scratch. 
 
 ## Support us
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel_magic.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel_magic)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+Laravel Magic is a free open source project. If you use the project, please [star us on Github](https://github.com/dominiquevienne/laravel_magic)... it costs nothing but a click! 😉
 
 ## Installation
 
@@ -24,38 +24,114 @@ You can install the package via composer:
 composer require dominiquevienne/laravel-magic
 ```
 
-You can publish and run the migrations with:
+This package does not provide
+- any migration
+- any configuration file 
+- any view
 
-```bash
-php artisan vendor:publish --tag="laravel-magic-migrations"
-php artisan migrate
-```
-
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag="laravel-magic-config"
-```
-
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="laravel-magic-views"
-```
 
 ## Usage
 
+### Models
+
+Extending your models from `AbstractModel` will give you the opportunity to get the autocompletion that comes with PHPDoc in your IDE and will make it possible to check if a relationship exist for the given model.
+
+It will also make it possible for `AbstractController` to make the magic happen. (see Controllers). 
 ```php
-$laravelMagic = new Dominiquevienne\LaravelMagic();
-echo $laravelMagic->echoPhrase('Hello, Dominiquevienne!');
+<?php
+
+namespace App\Models;
+
+use Dominiquevienne\LaravelMagic\Models\AbstractModel;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * @property-read int $id
+ * Your PHPDoc goes here 
+ */
+class YourModel extends AbstractModel
+{
+    use HasFactory;
+
+    protected $fillable = [
+    // ...
+    ];
+}
+
 ```
+
+### Controllers
+
+Extending your controllers from `AbstractController` will give you the opportunity to get a fully automated way to generate index, show, destroy, update, store methods without writing a single controller line. This will fill 90% of the API Resource needs.
+
+Since default methods are already available in `AbstractController`, you can directly configure your routes to target the usual methods and magic will happen.
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use Dominiquevienne\LaravelMagic\Http\Controllers\AbstractController;
+
+class YourController extends AbstractController
+{
+}
+
+```
+
+#### Relationships
+When calling an index or show endpoint, you can add the `with` GET parameter in order to retrieve direct relationships of a given model.
+The API will not throw an error / warning if relationship is not available.
+
+If the property is not provided or if value is empty after sanitization, the query will result in a normal query without any relationship retrieval.
+
+#### Fields
+When calling an index or show endpoint, you can add the `fields` GET parameter in order to only retrieve the listed fields.
+The API will not throw an error / warning if field is not available.
+
+If the property is not provided or if value is empty after sanitization, the query will throw every available fields.
+
+#### Filtering
+When calling an index endpoint, you can add the `filter` GET parameter in order to filter the list so you only retrieve the row you targeted.
+The API will not throw an error / warning if the fields you use for filtering are not available.
+
+If the property is not provided or if value is empty after sanitization, the query will result in a normal query retrieving all the rows.
+
+#### Ordering
+When calling an index endpoint, you can add the `filter` GET parameter in order to order the provided result is ordered the way you need.
+
+The API will throw an error if you provide a non compliant string.
+
+If the property is not provided, the query will result in a normal query retrieving all the rows without any specific sorting.
+
+#### Pagination
+
+The standard Laravel pagination is integrated. Please refer to the official `paginate` [documentation](https://laravel.com/docs/9.x/pagination).
+
+### Requests
+
+Laravel Magic provides a `BootstrapRequest` file which will be call on any `AbstractConctroller.create` and `AbstractConctroller.update` methods. If a request which name is `ModelnameRequest` is available in your `Requests` folder, it will be used to generate the validation rules. 
+
+### Middlewares
+
+Laravel Magic provides `ForceJson` and `VerifyJwtToken` middlewares. Those can be set up in Laravel `Kernel`.
+
+### Traits
+
+We also provide a `HasPublicationStatus` trait. To use the trait, add it to your models and migrate your schema so it has the `publication_status_id` field. Value of this field is handled by `$publicationStatusAvailable` property. 
+
+### Exceptions
+
+Laravel Magic provides those Exceptions:
+- ControllerAutomationException
+- EnvException
+- PublicationStatusException
+- StatusUnknownException
+
+These are used internally but you can of course use them as you want.
 
 ## Testing
 
