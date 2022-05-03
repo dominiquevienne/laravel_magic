@@ -142,6 +142,7 @@ class AbstractController extends Controller
     public function index(Request $request): Response
     {
         $fields = $request->get('fields');
+        $fields = $this->filterFields($fields);
 
         $filter = json_decode(
             urldecode(
@@ -160,7 +161,6 @@ class AbstractController extends Controller
         $query = $query->with($with);
 
         if($fields) {
-            $fields = explode(',', $fields);
             $query = $query->select($fields);
         }
 
@@ -204,6 +204,7 @@ class AbstractController extends Controller
         $with = $this->filterWith($with);
 
         $fields = $request->get('fields');
+        $fields = $this->filterFields($fields);
 
         $query = $modelName::query();
         $query = $query->with($with);
@@ -212,7 +213,6 @@ class AbstractController extends Controller
         }
 
         if ($fields) {
-            $fields = explode(',', $fields);
             $query = $query->select($fields);
         }
 
@@ -357,5 +357,25 @@ class AbstractController extends Controller
             $with = [];
         }
         return $with;
+    }
+
+    /**
+     * @param string|null $fields
+     * @return string[]
+     */
+    private function filterFields(?string $fields): array
+    {
+        $fields = explode(',', $fields);
+        /** @var AbstractModel $object */
+        $object = new $this->modelName;
+        $fillable = $object->getFillable();
+
+        foreach ($fields as $key => $field) {
+            if (!in_array($field, $fillable) && !Schema::hasColumn($object->getTable(), $field)) {
+                unset($fields[$key]);
+            }
+        }
+
+        return $fields;
     }
 }
