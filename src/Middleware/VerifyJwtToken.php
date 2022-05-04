@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class VerifyJwtToken
 {
@@ -43,7 +44,8 @@ class VerifyJwtToken
         $anonymizedToken = substr($jwtToken, 0, $visibleLength) . '...' . substr($jwtToken, strlen($jwtToken) - $visibleLength, $visibleLength);
 
         try {
-            JWT::decode($jwtToken, new Key($publicKey, 'RS256'));
+            $tokenDecoded = JWT::decode($jwtToken, new Key($publicKey, 'RS256'));
+            Session::put('token_decoded', (array) $tokenDecoded);
         } catch (ExpiredException $e) {
 
             Log::info(__DIR__ . DIRECTORY_SEPARATOR . __FILE__ . ' - ' . $e->getMessage() . ' - token: ' . $anonymizedToken);
