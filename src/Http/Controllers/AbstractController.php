@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use JetBrains\PhpStorm\NoReturn;
 
-class AbstractController extends Controller
+abstract class AbstractController extends Controller
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
