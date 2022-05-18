@@ -393,7 +393,12 @@ class AbstractController extends Controller
         return $fields;
     }
 
-    private function getSuggestedClassName()
+    /**
+     * Will determine a suggested class name for model based on Controller
+     * 
+     * @return string
+     */
+    private function getSuggestedClassName(): string
     {
         $controllerClassName = get_class($this);
 
