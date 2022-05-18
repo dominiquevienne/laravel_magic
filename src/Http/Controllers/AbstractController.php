@@ -20,13 +20,13 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use JetBrains\PhpStorm\NoReturn;
 
-abstract class AbstractController extends Controller
+class AbstractController extends Controller
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     private const REGEX_CONTROLLER = '/Controller$/s';
     private const SORTING_KEY_DEFAULT = 'name';
-    private const PAGINATION_MAX_VALUE = 100;
+    private const PAGINATION_MAX_VALUE = 1000;
 
     protected string $modelName;
     protected string $resourceKey;
@@ -55,9 +55,7 @@ abstract class AbstractController extends Controller
             $this->validateModel($modelName);
             return;
         }
-        $controllerBaseClassName = class_basename(get_class($this));
-        $suggestedModelBaseClassName = preg_replace(self::REGEX_CONTROLLER, '', $controllerBaseClassName);
-        $suggestedModelClassName = 'App\\Models\\' . $suggestedModelBaseClassName;
+        $suggestedModelClassName = $this->getSuggestedClassName();
         $this->validateModel($suggestedModelClassName);
         $this->modelName = $suggestedModelClassName;
     }
@@ -393,5 +391,24 @@ abstract class AbstractController extends Controller
         }
 
         return $fields;
+    }
+
+    private function getSuggestedClassName()
+    {
+        $controllerClassName = get_class($this);
+
+        /**
+         * Get Model namespace based on controller namespace
+         */
+        preg_match('/^(.*)\\Http/', $controllerClassName, $m);
+        $suggestedModelNameSpace = $m[1] . 'Models';
+
+        /**
+         * Get Model name based on controller base name
+         */
+        $controllerBaseClassName = class_basename($controllerClassName);
+        $suggestedModelBaseClassName = preg_replace(self::REGEX_CONTROLLER, '', $controllerBaseClassName);
+
+        return $suggestedModelNameSpace . '\\' . $suggestedModelBaseClassName;
     }
 }
