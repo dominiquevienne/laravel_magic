@@ -337,6 +337,7 @@ class AbstractController extends Controller
         foreach ($object->getFillable() as $field) {
             $object->$field = $request->input($field);
         }
+
         $meta = [];
         if (!$object->save()) {
             $meta = [
@@ -398,22 +399,54 @@ class AbstractController extends Controller
      * 
      * @return string
      */
-    private function getSuggestedClassName(): string
+    private function getSuggestedClassName($type = 'model')
     {
+        $availableTypes = [
+            'model' => 'Models',
+            'request' => 'Http\\Requests',
+        ];
+        if (!array_key_exists($type, $availableTypes)) {
+            throw new ControllerAutomationException('The class type ' . $type . ' is not supported');
+        }
+
         $controllerClassName = get_class($this);
 
         /**
          * Get Model namespace based on controller namespace
          */
         preg_match('/^(.*)\\Http/', $controllerClassName, $m);
-        $suggestedModelNameSpace = $m[1] . 'Models';
+        $suggestedNameSpace = $m[1] . $availableTypes[$type];
 
         /**
          * Get Model name based on controller base name
          */
         $controllerBaseClassName = class_basename($controllerClassName);
         $suggestedModelBaseClassName = preg_replace(self::REGEX_CONTROLLER, '', $controllerBaseClassName);
+        if ($type === 'request') {
+            $suggestedModelBaseClassName .= 'Request';
+        }
 
-        return $suggestedModelNameSpace . '\\' . $suggestedModelBaseClassName;
+        return $suggestedNameSpace . '\\' . $suggestedModelBaseClassName;
+    }
+
+    /**
+     * @return Response
+     * @throws ControllerAutomationException
+     */
+    public function validationRules(): Response
+    {
+        $requestClass = $this->getSuggestedClassName('request');
+        if (class_exists($requestClass)) {
+            $requestObject = new $requestClass;
+            return $this->sendResponse(collect($requestObject->rules()));
+        }
+        $meta = [
+            'result' => false,
+            'http-status' => 500,
+            'errors' => [
+                'Unable to find validation rules for class ' . $this->modelName,
+            ],
+        ];
+        return $this->sendResponse(new Collection(), $meta);
     }
 }
