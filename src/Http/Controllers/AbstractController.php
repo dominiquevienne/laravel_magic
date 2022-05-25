@@ -10,6 +10,7 @@ use Illuminate\Routing\Controller;
 use Dominiquevienne\LaravelMagic\Exceptions\ControllerAutomationException;
 use Dominiquevienne\LaravelMagic\Http\Requests\BootstrapRequest;
 use Dominiquevienne\LaravelMagic\Models\AbstractModel;
+use Dominiquevienne\LaravelMagic\Models\Statistic;
 use Dominiquevienne\LaravelMagic\Traits\HasPublicationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -17,8 +18,10 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use JetBrains\PhpStorm\NoReturn;
+use App\Models\User;
 
 class AbstractController extends Controller
 {
@@ -32,6 +35,13 @@ class AbstractController extends Controller
     protected string $resourceKey;
     protected ?string $sortingKey;
     protected string $sortingDirection = 'ASC';
+    protected array $registeredEndpoints = [
+        'index',
+        'show',
+        'destroy',
+        'update',
+        'store',
+    ];
     private bool $usePublicationStatusTrait = false;
 
     /**
@@ -65,7 +75,7 @@ class AbstractController extends Controller
      * @return void
      * @throws ControllerAutomationException
      */
-    private function validateModel($modelName)
+    private function validateModel($modelName): void
     {
         if (!class_exists($modelName)) {
             throw new ControllerAutomationException('The ' . $modelName . ' class does not exist');
@@ -134,11 +144,13 @@ class AbstractController extends Controller
      * Display a listing of the resource.
      * @param Request $request
      * @return Response
+     * @throws ControllerAutomationException
      * @todo Check if implementing a validation on $filters should be done (available properties for filtering based on fillable)
      *
      */
     public function index(Request $request): Response
     {
+        $this->recordCall(__METHOD__);
         $fields = $request->get('fields');
         $fields = $this->filterFields($fields);
 
@@ -202,11 +214,14 @@ class AbstractController extends Controller
      * @param Request $request
      * @param int $objectId
      * @return Response
-     * @todo Implement rights management
+     * @throws ControllerAutomationException
      * @todo Implement with
+     * @todo Implement rights management
      */
     public function show(Request $request, int $objectId): Response
     {
+        $this->recordCall(__METHOD__);
+
         /** @var AbstractModel $modelName */
         $modelName = $this->modelName;
 
@@ -255,10 +270,13 @@ class AbstractController extends Controller
      *
      * @param int $objectId
      * @return Response
+     * @throws ControllerAutomationException
      * @todo Implement rights management
      */
     public function destroy(int $objectId): Response
     {
+        $this->recordCall(__METHOD__);
+
         /** @var AbstractModel $modelName */
         $modelName = $this->modelName;
         try {
@@ -295,9 +313,12 @@ class AbstractController extends Controller
      * @param BootstrapRequest $request
      * @param int $objectId
      * @return Response
+     * @throws ControllerAutomationException
      */
     public function update(BootstrapRequest $request, int $objectId): Response
     {
+        $this->recordCall(__METHOD__);
+
         /** @var AbstractModel $object */
         $object = new $this->modelName;
         try {
@@ -319,9 +340,12 @@ class AbstractController extends Controller
      *
      * @param BootstrapRequest $request
      * @return Response
+     * @throws ControllerAutomationException
      */
     public function store(BootstrapRequest $request): Response
     {
+        $this->recordCall(__METHOD__);
+
         $object = new $this->modelName;
         $meta = $this->saveByFillable($object, $request);
         return $this->sendResponse($object, $meta);
@@ -396,7 +420,7 @@ class AbstractController extends Controller
 
     /**
      * Will determine a suggested class name for model based on Controller
-     * 
+     *
      * @return string
      */
     private function getSuggestedClassName($type = 'model')
@@ -448,5 +472,29 @@ class AbstractController extends Controller
             ],
         ];
         return $this->sendResponse(new Collection(), $meta);
+    }
+
+    /**
+     * @param string $featureSlug
+     * @return void
+     * @throws ControllerAutomationException
+     */
+    private function recordCall(string $featureSlug): void
+    {
+        if (!in_array($featureSlug, $this->registeredEndpoints)) {
+            return;
+        }
+
+        $tokenDecoded = Session::get('token_decoded');
+        if (empty($tokenDecoded['sub'])) {
+            throw new ControllerAutomationException('Unable to retrieve user ID');
+        }
+        $user = User::findOrFail($tokenDecoded['sub']);
+
+        $statistic = new Statistic();
+        $statistic->model_name = $this->modelName;
+        $statistic->feature_slug = $featureSlug;
+        $statistic->user_id = $user->id;
+        $statistic->save();
     }
 }

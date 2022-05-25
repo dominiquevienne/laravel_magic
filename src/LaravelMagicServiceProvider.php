@@ -17,9 +17,8 @@ class LaravelMagicServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('laravel-magic')
-            ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_laravel-magic_table')
-            ->hasCommand(LaravelMagicCommand::class);
+            ->hasMigrations([
+                'create_statistics_table',
+            ]);
     }
 }
