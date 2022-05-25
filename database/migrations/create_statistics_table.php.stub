@@ -23,7 +23,7 @@ return new class extends Migration
             /**
              * INDEXES
              */
-            $table->unique([
+            $table->index([
                 'model_name',
                 'feature_slug',
                 'user_id',
