@@ -57,7 +57,11 @@ class BootstrapRequest extends FormRequest
         $fromJson = (property_exists($contentDecoded, $resourceKeyName)) ?? false;
 
         foreach ($fillables as $field) {
-            $filteringArray[$field] = $fromJson ? $contentDecoded->$resourceKeyName->$field : $this->{$field};
+            if ($fromJson && property_exists($contentDecoded->$resourceKeyName, $field)) {
+                $filteringArray[$field] = $contentDecoded->$resourceKeyName->$field;
+            } elseif ($fromJson && property_exists($this, $field)) {
+                $filteringArray[$field] = $this->$field;
+            }
         }
 
         $this->replace($filteringArray);
