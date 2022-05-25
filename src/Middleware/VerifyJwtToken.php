@@ -8,6 +8,7 @@ use Exception;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,10 +22,10 @@ class VerifyJwtToken
      *
      * @param Request $request
      * @param Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return Response|RedirectResponse
+     * @return JsonResponse|Response|RedirectResponse
      * @throws EnvException
      */
-    public function handle(Request $request, Closure $next): Response|RedirectResponse
+    public function handle(Request $request, Closure $next)
     {
         $jwtToken = $this->getJwtToken($request);
         $publicKey = env('OAUTH_KEY_PUB');
