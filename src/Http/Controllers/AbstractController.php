@@ -2,6 +2,7 @@
 
 namespace Dominiquevienne\LaravelMagic\Http\Controllers;
 
+use Dominiquevienne\LaravelMagic\Traits\ClassSuggestion;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -25,9 +26,8 @@ use App\Models\User;
 
 class AbstractController extends Controller
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, ClassSuggestion;
 
-    private const REGEX_CONTROLLER = '/Controller$/s';
     private const SORTING_KEY_DEFAULT = 'name';
     private const PAGINATION_MAX_VALUE = 1000;
 
@@ -416,41 +416,6 @@ class AbstractController extends Controller
         }
 
         return $fields;
-    }
-
-    /**
-     * Will determine a suggested class name for model based on Controller
-     *
-     * @return string
-     */
-    private function getSuggestedClassName($type = 'model')
-    {
-        $availableTypes = [
-            'model' => 'Models',
-            'request' => 'Http\\Requests',
-        ];
-        if (!array_key_exists($type, $availableTypes)) {
-            throw new ControllerAutomationException('The class type ' . $type . ' is not supported');
-        }
-
-        $controllerClassName = get_class($this);
-
-        /**
-         * Get Model namespace based on controller namespace
-         */
-        preg_match('/^(.*)\\Http/', $controllerClassName, $m);
-        $suggestedNameSpace = $m[1] . $availableTypes[$type];
-
-        /**
-         * Get Model name based on controller base name
-         */
-        $controllerBaseClassName = class_basename($controllerClassName);
-        $suggestedModelBaseClassName = preg_replace(self::REGEX_CONTROLLER, '', $controllerBaseClassName);
-        if ($type === 'request') {
-            $suggestedModelBaseClassName .= 'Request';
-        }
-
-        return $suggestedNameSpace . '\\' . $suggestedModelBaseClassName;
     }
 
     /**

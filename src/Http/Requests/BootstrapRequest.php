@@ -2,11 +2,15 @@
 
 namespace Dominiquevienne\LaravelMagic\Http\Requests;
 
+use Dominiquevienne\LaravelMagic\Exceptions\ControllerAutomationException;
+use Dominiquevienne\LaravelMagic\Traits\ClassSuggestion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
 class BootstrapRequest extends FormRequest
 {
+    use ClassSuggestion;
+
     private string $requestClassName;
     private string $resourceName;
     private string $resourceKeyName;
@@ -16,9 +20,12 @@ class BootstrapRequest extends FormRequest
 
     /**
      * @return void
+     * @throws ControllerAutomationException
      */
-    private function getDataFromRoute()
+    private function getDataFromRoute(): void
     {
+        $controllerName = $this->route()->getController();
+
         $routeName = $this->route()->getName();
         $this->resourceKeyName = explode('.', $routeName)[0];
         $this->resourceName = Str::singular($this->resourceKeyName);
@@ -29,14 +36,15 @@ class BootstrapRequest extends FormRequest
         );
 
         $this->modelId = $this->route(strtolower($modelName));
-        $this->modelClassName = 'App\\Models\\' . $modelName;
-        $this->requestClassName = 'App\\Http\\Requests\\' . $modelName . 'Request';
+        $this->modelClassName = $this->getSuggestedClassName('model', $controllerName);
+        $this->requestClassName = $this->getSuggestedClassName('request', $controllerName);
     }
 
     /**
      * @return void
+     * @throws ControllerAutomationException
      */
-    public function prepareForValidation()
+    public function prepareForValidation(): void
     {
         $this->getDataFromRoute();
         $requestContent = $this->getContent();
