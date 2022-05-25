@@ -481,6 +481,8 @@ class AbstractController extends Controller
      */
     private function recordCall(string $featureSlug): void
     {
+        $featureSlug = explode('::', $featureSlug);
+        $featureSlug = $featureSlug[1];
         if (!in_array($featureSlug, $this->registeredEndpoints)) {
             return;
         }
