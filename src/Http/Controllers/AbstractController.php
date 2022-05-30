@@ -444,7 +444,7 @@ class AbstractController extends Controller
      * @return void
      * @throws ControllerAutomationException
      */
-    private function recordCall(string $featureSlug): void
+    protected function recordCall(string $featureSlug): void
     {
         $featureSlug = explode('::', $featureSlug);
         $featureSlug = $featureSlug[1];
