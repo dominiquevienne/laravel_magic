@@ -25,6 +25,7 @@ trait ClassSuggestion
         $availableTypes = [
             'model' => 'Models',
             'request' => 'Http\\Requests',
+            'filter' => 'Http\\Filters',
         ];
         if (!array_key_exists($type, $availableTypes)) {
             throw new ControllerAutomationException('The class type ' . $type . ' is not supported');
@@ -45,6 +46,8 @@ trait ClassSuggestion
         $suggestedModelBaseClassName = preg_replace($this->regexController, '', $controllerBaseClassName);
         if ($type === 'request') {
             $suggestedModelBaseClassName .= 'Request';
+        } elseif ($type === 'filter') {
+            $suggestedModelBaseClassName .= 'Filter';
         }
 
         return $suggestedNameSpace . '\\' . $suggestedModelBaseClassName;

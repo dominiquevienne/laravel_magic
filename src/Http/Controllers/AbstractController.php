@@ -2,6 +2,7 @@
 
 namespace Dominiquevienne\LaravelMagic\Http\Controllers;
 
+use Dominiquevienne\LaravelMagic\Http\Filters\GenericFilter;
 use Dominiquevienne\LaravelMagic\Traits\ClassSuggestion;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -41,6 +42,7 @@ class AbstractController extends Controller
         'destroy',
         'update',
         'store',
+        'validationRules',
     ];
     private bool $usePublicationStatusTrait = false;
 
@@ -165,6 +167,15 @@ class AbstractController extends Controller
 
         /** @var Builder $query */
         $query = $modelName::query();
+
+        /** Apply in-app provided filters */
+        $filterClass = $this->getSuggestedClassName('filter');
+        if (class_exists($filterClass)) {
+            $query = $filterClass::applyFilter($query);
+        } else {
+            $query = GenericFilter::applyFilter($query);
+        }
+
         if ($this->usePublicationStatusTrait) {
             $query = $query->published();
         }
@@ -232,6 +243,15 @@ class AbstractController extends Controller
         $fields = $this->filterFields($fields);
 
         $query = $modelName::query();
+
+        /** Apply in-app provided filters */
+        $filterClass = $this->getSuggestedClassName('filter');
+        if (class_exists($filterClass)) {
+            $query = $filterClass::applyFilter($query);
+        } else {
+            $query = GenericFilter::applyFilter($query);
+        }
+
         foreach ($with as $relationshipName) {
             $query = $query->with([$relationshipName => function($query) {
                 $query->take(self::PAGINATION_MAX_VALUE);
@@ -271,7 +291,7 @@ class AbstractController extends Controller
      * @param int $objectId
      * @return Response
      * @throws ControllerAutomationException
-     * @todo Implement rights management
+     * @todo Implement PK usage
      */
     public function destroy(int $objectId): Response
     {
@@ -280,7 +300,16 @@ class AbstractController extends Controller
         /** @var AbstractModel $modelName */
         $modelName = $this->modelName;
         try {
-            $item = $modelName::findOrFail($objectId);
+            $query = $modelName::query();
+
+            /** Apply in-app provided filters */
+            $filterClass = $this->getSuggestedClassName('filter');
+            if (class_exists($filterClass)) {
+                $query = $filterClass::applyFilter($query);
+            } else {
+                $query = GenericFilter::applyFilter($query);
+            }
+            $item = $query->where('id', '=', $objectId)->firstOrFail();
 
             if ($item->delete()) {
                 $meta = [
@@ -314,15 +343,26 @@ class AbstractController extends Controller
      * @param int $objectId
      * @return Response
      * @throws ControllerAutomationException
+     * @todo Implement PK usage
      */
     public function update(BootstrapRequest $request, int $objectId): Response
     {
         $this->recordCall(__METHOD__);
 
         /** @var AbstractModel $object */
-        $object = new $this->modelName;
+        $modelName = new $this->modelName;
         try {
-            $object = $object->findOrFail($objectId);
+            $query = $modelName::query();
+
+            /** Apply in-app provided filters */
+            $filterClass = $this->getSuggestedClassName('filter');
+            if (class_exists($filterClass)) {
+                $query = $filterClass::applyFilter($query);
+            } else {
+                $query = GenericFilter::applyFilter($query);
+            }
+            $object = $query->where('id', '=', $objectId)->firstOrFail();
+
             $meta = $this->saveByFillable($object, $request);
         } catch (ModelNotFoundException $exception) {
             $meta = [
@@ -424,6 +464,7 @@ class AbstractController extends Controller
      */
     public function validationRules(): Response
     {
+        $this->recordCall(__METHOD__);
         $requestClass = $this->getSuggestedClassName('request');
         if (class_exists($requestClass)) {
             $requestObject = new $requestClass;
