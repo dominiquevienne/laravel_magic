@@ -103,7 +103,7 @@ If the property is not provided or if value is empty after sanitization, the que
 #### Ordering
 When calling an index endpoint, you can add the `filter` GET parameter in order to order the provided result is ordered the way you need.
 
-The API will throw an error if you provide a non compliant string.
+The API will throw an error if you provide a non-compliant string.
 
 If the property is not provided, the query will result in a normal query retrieving all the rows without any specific sorting.
 
@@ -113,7 +113,12 @@ The standard Laravel pagination is integrated. Please refer to the official `pag
 
 ### Requests
 
-Laravel Magic provides a `BootstrapRequest` file which will be call on any `AbstractConctroller.create` and `AbstractConctroller.update` methods. If a request which name is `ModelnameRequest` is available in your `Requests` folder, it will be used to generate the validation rules. 
+Laravel Magic provides a `BootstrapRequest` file which will be call on any `AbstractConctroller.create` and `AbstractConctroller.update` methods. If a request which name is `ModelnameRequest` is available in your `Requests` folder, it will be used to generate the validation rules.
+
+### Filtering queries
+
+In your development, if you create a `src/Http/Filters/ModelNameFilter.php` class extending the `GenericFilter` class, Laravel Magic will automatically filter the way it retrieves data in your CRUD methods. 
+If this class has not been created, by default, no filtering is done. However, if you set `LARAVEL_MAGIC_FILTERING_MODE=paranoid` in your `.env` file, LaravelMagic will make it impossible to get any data. 
 
 ### Middlewares
 
