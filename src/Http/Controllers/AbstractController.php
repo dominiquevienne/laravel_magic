@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -44,6 +45,7 @@ class AbstractController extends Controller
         'store',
         'validationRules',
     ];
+    protected int $cacheDuration = 28800;
     private bool $usePublicationStatusTrait = false;
 
     /**
@@ -55,6 +57,11 @@ class AbstractController extends Controller
         $this->isUsingPublicationStatusTrait();
         $this->getResourceKey();
         $this->getSortingKey();
+
+        $cacheDuration = env('LARAVEL_MAGIC_CACHE_DEFAULT_DURATION');
+        if ((int) $cacheDuration == $cacheDuration) {
+            $this->cacheDuration = env('LARAVEL_MAGIC_CACHE_DEFAULT_DURATION');
+        }
     }
 
     /**
@@ -214,7 +221,19 @@ class AbstractController extends Controller
         if (!empty($this->sortingKey)) {
             $query = $query->orderBy(trim($this->sortingKey), $this->sortingDirection);
         }
-        $items = $query->paginate(self::PAGINATION_MAX_VALUE);
+
+        $queryFingerprint = $this->makeQueryFingerPrint($query);
+
+        $items = null;
+        if ($this->cacheDuration !== 0) {
+            $items = Cache::get('query-' . $queryFingerprint);
+        }
+        if (empty($items)) {
+            $items = $query->paginate(self::PAGINATION_MAX_VALUE);
+            if ($this->cacheDuration !== 0) {
+                Cache::put('query-' . $queryFingerprint, $items, $this->cacheDuration);
+            }
+        }
 
         return $this->sendResponse($items);
     }
@@ -266,7 +285,18 @@ class AbstractController extends Controller
         }
 
         try {
-            $item = $query->findOrFail($objectId);
+            $queryFingerprint = $this->makeQueryFingerPrint($query);
+
+            $item = null;
+            if ($this->cacheDuration !== 0) {
+                $item = Cache::get('query-' . $queryFingerprint);
+            }
+            if (empty($item)) {
+                $item = $query->findOrFail($objectId);
+                if ($this->cacheDuration !== 0) {
+                    Cache::put('query-' . $queryFingerprint, $item, $this->cacheDuration);
+                }
+            }
 
             $meta = [
                 'http-status' => 200,
@@ -504,5 +534,16 @@ class AbstractController extends Controller
         $statistic->feature_slug = $featureSlug;
         $statistic->user_id = $user->id;
         $statistic->save();
+    }
+
+    /**
+     * @param Builder $query
+     * @return string
+     */
+    protected function makeQueryFingerPrint(Builder $query): string
+    {
+        $queryString = $query->toSql() . '-' . implode('_', $query->getBindings());
+
+        return Str::slug($queryString);
     }
 }
