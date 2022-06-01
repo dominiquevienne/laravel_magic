@@ -1,0 +1,14 @@
+<?php
+
+namespace App\Http\Filters;
+
+use Dominiquevienne\LaravelMagic\Http\Filters\GenericFilter;
+use Illuminate\Database\Eloquent\Builder;
+
+class SampleFilter extends GenericFilter
+{
+    static public function applyFilter(Builder $query): Builder
+    {
+        return $query;
+    }
+}

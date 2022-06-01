@@ -2,9 +2,9 @@
 
 namespace Dominiquevienne\LaravelMagic;
 
+use Dominiquevienne\LaravelMagic\Commands\MakeFilter;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Dominiquevienne\LaravelMagic\Commands\LaravelMagicCommand;
 
 class LaravelMagicServiceProvider extends PackageServiceProvider
 {
@@ -17,6 +17,7 @@ class LaravelMagicServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('laravel-magic')
+            ->hasCommands([MakeFilter::class])
             ->hasMigrations([
                 'create_statistics_table',
             ]);
