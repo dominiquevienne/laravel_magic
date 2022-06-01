@@ -111,6 +111,12 @@ If the property is not provided, the query will result in a normal query retriev
 
 The standard Laravel pagination is integrated. Please refer to the official `paginate` [documentation](https://laravel.com/docs/9.x/pagination).
 
+#### Query Caching
+
+By default Laravel Magic will cache queries used for Index and Show methods. It will use their fingerprint to ensure that the cache value is the one corresponding to a unique query. This caching method takes in consideration the in-app filtering, user-filtering, fields, ordering, relationships and pagination. 
+
+The default behaviour is to store the query result in cache for 8 hours but the value can be overridden in your `.env` file through the `LARAVEL_MAGIC_CACHE_DEFAULT_DURATION` variable. The value of this variable is TTL for cache in seconds. Use `LARAVEL_MAGIC_CACHE_DEFAULT_DURATION=0` if you want to avoid totally query caching.   
+
 ### Requests
 
 Laravel Magic provides a `BootstrapRequest` file which will be call on any `AbstractConctroller.create` and `AbstractConctroller.update` methods. If a request which name is `ModelnameRequest` is available in your `Requests` folder, it will be used to generate the validation rules.
