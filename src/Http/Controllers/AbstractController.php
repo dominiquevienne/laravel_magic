@@ -180,7 +180,7 @@ class AbstractController extends Controller
         if (class_exists($filterClass)) {
             $query = $filterClass::applyFilter($query);
         } else {
-            $query = GenericFilter::applyFilter($query);
+            $query = GenericFilter::applyFilter($query, $filterClass);
         }
 
         if ($this->usePublicationStatusTrait) {
@@ -268,7 +268,7 @@ class AbstractController extends Controller
         if (class_exists($filterClass)) {
             $query = $filterClass::applyFilter($query);
         } else {
-            $query = GenericFilter::applyFilter($query);
+            $query = GenericFilter::applyFilter($query, $filterClass);
         }
 
         foreach ($with as $relationshipName) {
@@ -337,7 +337,7 @@ class AbstractController extends Controller
             if (class_exists($filterClass)) {
                 $query = $filterClass::applyFilter($query);
             } else {
-                $query = GenericFilter::applyFilter($query);
+                $query = GenericFilter::applyFilter($query, $filterClass);
             }
             $item = $query->where('id', '=', $objectId)->firstOrFail();
 
@@ -389,7 +389,7 @@ class AbstractController extends Controller
             if (class_exists($filterClass)) {
                 $query = $filterClass::applyFilter($query);
             } else {
-                $query = GenericFilter::applyFilter($query);
+                $query = GenericFilter::applyFilter($query, $filterClass);
             }
             $object = $query->where('id', '=', $objectId)->firstOrFail();
 
