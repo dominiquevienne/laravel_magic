@@ -174,6 +174,8 @@ class AbstractController extends Controller
 
         /** @var Builder $query */
         $query = $modelName::query();
+        $modelObject = new $modelName;
+        $tableMain = $modelObject->getTable();
 
         /** Apply in-app provided filters */
         $filterClass = $this->getSuggestedClassName('filter');
@@ -201,12 +203,12 @@ class AbstractController extends Controller
                 if (is_array($filter->fields)) {
                     foreach ($filter->fields as $fieldEntity) {
                         if ($this->filterFields($fieldEntity->field)) {
-                            $query = $query->where($fieldEntity->field, $fieldEntity->operator, $fieldEntity->value);
+                            $query = $query->where($tableMain . '.' . $fieldEntity->field, $fieldEntity->operator, $fieldEntity->value);
                         }
                     }
                 } elseif (is_object($filter->fields)) {
                     foreach ($filter->fields as $field => $value) {
-                        $query = $query->where($field, 'LIKE', $value);
+                        $query = $query->where($tableMain . '.' . $field, 'LIKE', $value);
                     }
                 }
             }
@@ -219,7 +221,7 @@ class AbstractController extends Controller
             }
         }
         if (!empty($this->sortingKey)) {
-            $query = $query->orderBy(trim($this->sortingKey), $this->sortingDirection);
+            $query = $query->orderBy($tableMain . '.' . trim($this->sortingKey), $this->sortingDirection);
         }
 
         $queryFingerprint = $this->makeQueryFingerPrint($query);
