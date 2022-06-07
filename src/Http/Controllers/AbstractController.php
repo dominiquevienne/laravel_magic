@@ -194,9 +194,25 @@ class AbstractController extends Controller
             }]);
         }
 
-        if($fields) {
-            $query = $query->select($fields);
+        if(empty($fields)) {
+            $fields = [];
+            $idField = $modelObject->getKeyName();
+            if (Schema::hasColumn($tableMain, $idField)) {
+                $fields[] = $tableMain . '.' . $idField;
+            }
+            foreach ($modelObject->getFillable() as $field) {
+                if (Schema::hasColumn($tableMain, $field)) {
+                    $fields[] = $tableMain . '.' . $field;
+                }
+            }
+        } else {
+            foreach ($fields as $field) {
+                if (Schema::hasColumn($tableMain, $field)) {
+                    $fields[] = $tableMain . '.' . $field;
+                }
+            }
         }
+        $query = $query->select($fields);
 
         if ($filter) {
             if ($filter->fields) {
@@ -325,6 +341,7 @@ class AbstractController extends Controller
      * @throws ControllerAutomationException
      * @todo Implement PK usage
      * @todo Find a better approach regarding Cache::flush()
+     * @todo Improve fields usage
      */
     public function destroy(int $objectId): Response
     {
@@ -332,6 +349,8 @@ class AbstractController extends Controller
 
         /** @var AbstractModel $modelName */
         $modelName = $this->modelName;
+        $modelObject = new $modelName;
+        $table = $modelObject->getTable();
         try {
             $query = $modelName::query();
 
@@ -342,7 +361,18 @@ class AbstractController extends Controller
             } else {
                 $query = GenericFilter::applyFilter($query, $filterClass);
             }
-            $item = $query->where('id', '=', $objectId)->firstOrFail();
+            $fields = [];
+            $idField = $modelObject->getKeyName();
+            if (Schema::hasColumn($table, $idField)) {
+                $fields[] = $table . '.' . $idField;
+            }
+            foreach ($modelObject->getFillable() as $field) {
+                if (Schema::hasColumn($table, $field)) {
+                    $fields[] = $table . '.' . $field;
+                }
+            }
+            $query = $query->select($fields);
+            $item = $query->where($table . '.id', '=', $objectId)->firstOrFail();
 
             if ($item->delete()) {
                 $meta = [
@@ -378,6 +408,7 @@ class AbstractController extends Controller
      * @return Response
      * @throws ControllerAutomationException
      * @todo Implement PK usage
+     * @todo Improve fields usage
      */
     public function update(BootstrapRequest $request, int $objectId): Response
     {
@@ -385,6 +416,8 @@ class AbstractController extends Controller
 
         /** @var AbstractModel $object */
         $modelName = new $this->modelName;
+        $table = $modelName->getTable();
+
         try {
             $query = $modelName::query();
 
@@ -395,7 +428,18 @@ class AbstractController extends Controller
             } else {
                 $query = GenericFilter::applyFilter($query, $filterClass);
             }
-            $object = $query->where('id', '=', $objectId)->firstOrFail();
+            $fields = [];
+            $idField = $modelName->getKeyName();
+            if (Schema::hasColumn($table, $idField)) {
+                $fields[] = $table . '.' . $idField;
+            }
+            foreach ($modelName->getFillable() as $field) {
+                if (Schema::hasColumn($table, $field)) {
+                    $fields[] = $table . '.' . $field;
+                }
+            }
+            $query = $query->select($fields);
+            $object = $query->where($table . '.id', '=', $objectId)->firstOrFail();
 
             $meta = $this->saveByFillable($object, $request);
         } catch (ModelNotFoundException $exception) {
