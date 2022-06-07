@@ -324,6 +324,7 @@ class AbstractController extends Controller
      * @return Response
      * @throws ControllerAutomationException
      * @todo Implement PK usage
+     * @todo Find a better approach regarding Cache::flush()
      */
     public function destroy(int $objectId): Response
     {
@@ -349,6 +350,7 @@ class AbstractController extends Controller
                     'result' => true,
                     'message' => 'The resource has been deleted',
                 ];
+                Cache::flush();
             } else {
                 $meta = [
                     'http-status' => 500,
@@ -427,6 +429,7 @@ class AbstractController extends Controller
      * @param AbstractModel $object
      * @param Request $request
      * @return array
+     * @todo Find a better approach regarding Cache::flush()
      */
     private function saveByFillable(AbstractModel $object, Request $request): array
     {
@@ -441,6 +444,8 @@ class AbstractController extends Controller
                 'result' => false,
                 'message' => 'An error occurred',
             ];
+        } else {
+            Cache::flush();
         }
 
         return $meta;
