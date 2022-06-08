@@ -195,16 +195,7 @@ class AbstractController extends Controller
         }
 
         if(empty($fields)) {
-            $fields = [];
-            $idField = $modelObject->getKeyName();
-            if (Schema::hasColumn($tableMain, $idField)) {
-                $fields[] = $tableMain . '.' . $idField;
-            }
-            foreach ($modelObject->getFillable() as $field) {
-                if (Schema::hasColumn($tableMain, $field)) {
-                    $fields[] = $tableMain . '.' . $field;
-                }
-            }
+            $fields = $this->defaultFields();
         } else {
             foreach ($fields as $field) {
                 if (Schema::hasColumn($tableMain, $field)) {
@@ -353,14 +344,8 @@ class AbstractController extends Controller
         $table = $modelObject->getTable();
         try {
             $query = $modelName::query();
+            $query = $this->filterQuery($query);
 
-            /** Apply in-app provided filters */
-            $filterClass = $this->getSuggestedClassName('filter');
-            if (class_exists($filterClass)) {
-                $query = $filterClass::applyFilter($query);
-            } else {
-                $query = GenericFilter::applyFilter($query, $filterClass);
-            }
             $fields = [];
             $idField = $modelObject->getKeyName();
             if (Schema::hasColumn($table, $idField)) {
@@ -420,24 +405,9 @@ class AbstractController extends Controller
 
         try {
             $query = $modelName::query();
+            $query = $this->filterQuery($query);
+            $fields = $this->defaultFields();
 
-            /** Apply in-app provided filters */
-            $filterClass = $this->getSuggestedClassName('filter');
-            if (class_exists($filterClass)) {
-                $query = $filterClass::applyFilter($query);
-            } else {
-                $query = GenericFilter::applyFilter($query, $filterClass);
-            }
-            $fields = [];
-            $idField = $modelName->getKeyName();
-            if (Schema::hasColumn($table, $idField)) {
-                $fields[] = $table . '.' . $idField;
-            }
-            foreach ($modelName->getFillable() as $field) {
-                if (Schema::hasColumn($table, $field)) {
-                    $fields[] = $table . '.' . $field;
-                }
-            }
             $query = $query->select($fields);
             $object = $query->where($table . '.id', '=', $objectId)->firstOrFail();
 
@@ -596,5 +566,45 @@ class AbstractController extends Controller
         $queryString = $query->toSql() . '-' . implode('_', $query->getBindings());
 
         return Str::slug($queryString);
+    }
+
+    /**
+     * @param Builder $query
+     * @return Builder
+     * @throws ControllerAutomationException
+     */
+    protected function filterQuery(Builder $query): Builder
+    {
+        /** Apply in-app provided filters */
+        $filterClass = $this->getSuggestedClassName('filter');
+        if (class_exists($filterClass)) {
+            $query = $filterClass::applyFilter($query);
+        } else {
+            $query = GenericFilter::applyFilter($query, $filterClass);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array
+     */
+    protected function defaultFields(): array
+    {
+        $modelObject = new $this->modelName;
+        $table = $modelObject->getTable();
+
+        $fields = [];
+        $idField = $modelObject->getKeyName();
+        if (Schema::hasColumn($table, $idField)) {
+            $fields[] = $table . '.' . $idField;
+        }
+        foreach ($modelObject->getFillable() as $field) {
+            if (Schema::hasColumn($table, $field)) {
+                $fields[] = $table . '.' . $field;
+            }
+        }
+
+        return $fields;
     }
 }
