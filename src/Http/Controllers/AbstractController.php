@@ -464,7 +464,7 @@ class AbstractController extends Controller
      * @param string|null $with
      * @return array
      */
-    private function filterWith(?string $with): array
+    protected function filterWith(?string $with): array
     {
         if ($with) {
             $with = explode(',', $with);
@@ -486,7 +486,7 @@ class AbstractController extends Controller
      * @param string|null $fields
      * @return string[]
      */
-    private function filterFields(?string $fields): array
+    protected function filterFields(?string $fields): array
     {
         $fields = explode(',', $fields);
         /** @var AbstractModel $object */
