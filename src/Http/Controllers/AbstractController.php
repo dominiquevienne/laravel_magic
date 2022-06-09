@@ -112,8 +112,9 @@ class AbstractController extends Controller
         if (empty($this->sortingKey)) {
             $this->sortingKey = self::SORTING_KEY_DEFAULT;
         }
+        /** @var AbstractModel $object */
         $object = new $this->modelName;
-        if(Schema::hasColumn($object->getTable(), $this->sortingKey)) {
+        if(Schema::connection($object->getConnectionName())->hasColumn($object->getTable(), $this->sortingKey)) {
             return;
         }
         $this->sortingKey = null;
@@ -174,6 +175,7 @@ class AbstractController extends Controller
 
         /** @var Builder $query */
         $query = $modelName::query();
+        /** @var AbstractModel $modelObject */
         $modelObject = new $modelName;
         $tableMain = $modelObject->getTable();
 
@@ -198,7 +200,7 @@ class AbstractController extends Controller
             $fields = $this->defaultFields();
         } else {
             foreach ($fields as $field) {
-                if (Schema::hasColumn($tableMain, $field)) {
+                if (Schema::connection($modelObject->getConnectionName())->hasColumn($tableMain, $field)) {
                     $fields[] = $tableMain . '.' . $field;
                 }
             }
@@ -346,16 +348,7 @@ class AbstractController extends Controller
             $query = $modelName::query();
             $query = $this->filterQuery($query);
 
-            $fields = [];
-            $idField = $modelObject->getKeyName();
-            if (Schema::hasColumn($table, $idField)) {
-                $fields[] = $table . '.' . $idField;
-            }
-            foreach ($modelObject->getFillable() as $field) {
-                if (Schema::hasColumn($table, $field)) {
-                    $fields[] = $table . '.' . $field;
-                }
-            }
+            $fields = $this->defaultFields();
             $query = $query->select($fields);
             $item = $query->where($table . '.id', '=', $objectId)->firstOrFail();
 
@@ -501,7 +494,7 @@ class AbstractController extends Controller
         $fillable = $object->getFillable();
 
         foreach ($fields as $key => $field) {
-            if (!in_array($field, $fillable) && !Schema::hasColumn($object->getTable(), $field)) {
+            if (!in_array($field, $fillable) && !Schema::connection($object->getConnectionName())->hasColumn($object->getTable(), $field)) {
                 unset($fields[$key]);
             }
         }
@@ -591,16 +584,17 @@ class AbstractController extends Controller
      */
     protected function defaultFields(): array
     {
+        /** @var AbstractModel $modelObject */
         $modelObject = new $this->modelName;
         $table = $modelObject->getTable();
 
         $fields = [];
         $idField = $modelObject->getKeyName();
-        if (Schema::hasColumn($table, $idField)) {
+        if (Schema::connection($modelObject->getConnectionName())->hasColumn($table, $idField)) {
             $fields[] = $table . '.' . $idField;
         }
         foreach ($modelObject->getFillable() as $field) {
-            if (Schema::hasColumn($table, $field)) {
+            if (Schema::connection($modelObject->getConnectionName())->hasColumn($table, $field)) {
                 $fields[] = $table . '.' . $field;
             }
         }
