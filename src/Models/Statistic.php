@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $model_name
  * @property string $feature_slug
  * @property int $user_id
+ * @property int|null $object_id
+ * @property string|null $payload
+ * @property string|null $object_before_action
  * @property-read string $created_at
  * @property-read string $updated_at
  */
@@ -19,6 +22,9 @@ class Statistic extends AbstractModel
         'model_name',
         'feature_slug',
         'user_id',
+        'object_id',
+        'payload',
+        'object_before_action'
     ];
 
 

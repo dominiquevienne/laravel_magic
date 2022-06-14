@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('statistics', function (Blueprint $table) {
-            $table->unsignedBigInteger('object_id')->index()->after('user_id');
+            $table->unsignedBigInteger('object_id')->nullable()->index()->after('user_id');
             $table->json('payload')->nullable()->after('object_id');
             $table->json('object_before_action')->nullable()->after('payload');
         });
@@ -28,9 +28,9 @@ return new class extends Migration
     public function down()
     {
         Schema::table('statistics', function (Blueprint $table) {
-            $table->removeColumn('object_id');
-            $table->removeColumn('payload');
-            $table->removeColumn('object_before_action');
+            $table->dropColumn('object_id');
+            $table->dropColumn('payload');
+            $table->dropColumn('object_before_action');
         });
     }
 };

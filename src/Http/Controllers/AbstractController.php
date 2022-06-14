@@ -160,7 +160,7 @@ class AbstractController extends Controller
      */
     public function index(Request $request): Response
     {
-        $this->recordCall(__METHOD__);
+        $this->recordCall(__METHOD__, $request);
         $fields = $request->get('fields');
         $fields = $this->filterFields($fields);
 
@@ -261,7 +261,7 @@ class AbstractController extends Controller
      */
     public function show(Request $request, int $objectId): Response
     {
-        $this->recordCall(__METHOD__);
+        $this->recordCall(__METHOD__, $request);
 
         /** @var AbstractModel $modelName */
         $modelName = $this->modelName;
@@ -338,12 +338,18 @@ class AbstractController extends Controller
      */
     public function destroy(int $objectId): Response
     {
-        $this->recordCall(__METHOD__);
-
         /** @var AbstractModel $modelName */
         $modelName = $this->modelName;
         $modelObject = new $modelName;
+        $currentState = $modelObject->find($objectId);
         $table = $modelObject->getTable();
+
+        $this->recordCall(
+            __METHOD__,
+            null,
+            $currentState
+        );
+
         try {
             $query = $modelName::query();
             $query = $this->filterQuery($query);
@@ -386,15 +392,19 @@ class AbstractController extends Controller
      * @return Response
      * @throws ControllerAutomationException
      * @todo Implement PK usage
-     * @todo Improve fields usage
      */
     public function update(BootstrapRequest $request, int $objectId): Response
     {
-        $this->recordCall(__METHOD__);
-
         /** @var AbstractModel $object */
         $modelName = new $this->modelName;
         $table = $modelName->getTable();
+        $currentState = $modelName->find($objectId);
+
+        $this->recordCall(
+            __METHOD__,
+            $request,
+            $currentState
+        );
 
         try {
             $query = $modelName::query();
@@ -425,7 +435,10 @@ class AbstractController extends Controller
      */
     public function store(BootstrapRequest $request): Response
     {
-        $this->recordCall(__METHOD__);
+        $this->recordCall(
+            _METHOD__,
+            $request
+        );
 
         $object = new $this->modelName;
         $meta = $this->saveByFillable($object, $request);
@@ -529,7 +542,11 @@ class AbstractController extends Controller
      * @return void
      * @throws ControllerAutomationException
      */
-    protected function recordCall(string $featureSlug): void
+    protected function recordCall(
+        string $featureSlug,
+        ?Request $request = null,
+        ?AbstractModel $currentState = null
+    ): void
     {
         $featureSlug = explode('::', $featureSlug);
         $featureSlug = $featureSlug[1];
@@ -543,10 +560,24 @@ class AbstractController extends Controller
         }
         $user = User::findOrFail($tokenDecoded['sub']);
 
+        $payload = null;
+        if ($request instanceof Request) {
+            $payload = json_encode($request->all());
+        }
+        $objectId = null;
+        $objectBeforeAction = null;
+        if ($currentState) {
+            $objectId = $currentState->getKey();
+            $objectBeforeAction = json_encode($currentState->toArray());
+        }
+
         $statistic = new Statistic();
         $statistic->model_name = $this->modelName;
         $statistic->feature_slug = $featureSlug;
         $statistic->user_id = $user->id;
+        $statistic->object_id = $objectId;
+        $statistic->payload = $payload;
+        $statistic->object_before_action = $objectBeforeAction;
         $statistic->save();
     }
 
