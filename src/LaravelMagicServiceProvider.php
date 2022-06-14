@@ -20,6 +20,7 @@ class LaravelMagicServiceProvider extends PackageServiceProvider
             ->hasCommands([MakeFilter::class])
             ->hasMigrations([
                 'create_statistics_table',
+                'update_statistics_add_payload',
             ]);
     }
 }
