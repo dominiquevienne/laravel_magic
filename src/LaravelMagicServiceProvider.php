@@ -22,6 +22,7 @@ class LaravelMagicServiceProvider extends PackageServiceProvider
                 'create_statistics_table',
                 'update_statistics_add_payload',
                 'update_statistics_add_ip',
+                'update_statistics_user_id_nullable',
             ]);
     }
 }

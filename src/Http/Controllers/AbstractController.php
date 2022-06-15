@@ -557,10 +557,11 @@ class AbstractController extends Controller
         }
 
         $tokenDecoded = Session::get('token_decoded');
-        if (empty($tokenDecoded['sub'])) {
-            throw new ControllerAutomationException('Unable to retrieve user ID');
+        $userId = null;
+        if (!empty($tokenDecoded['sub'])) {
+            $user = User::findOrFail($tokenDecoded['sub']);
+            $userId = $user->id;
         }
-        $user = User::findOrFail($tokenDecoded['sub']);
 
         $payload = null;
         if ($request instanceof Request) {
@@ -576,7 +577,7 @@ class AbstractController extends Controller
         $statistic = new Statistic();
         $statistic->model_name = $this->modelName;
         $statistic->feature_slug = $featureSlug;
-        $statistic->user_id = $user->id;
+        $statistic->user_id = $userId;
         $statistic->object_id = $objectId;
         $statistic->payload = $payload;
         $statistic->object_before_action = $objectBeforeAction;
