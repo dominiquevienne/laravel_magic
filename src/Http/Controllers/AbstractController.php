@@ -539,6 +539,8 @@ class AbstractController extends Controller
 
     /**
      * @param string $featureSlug
+     * @param Request|null $request
+     * @param AbstractModel|null $currentState
      * @return void
      * @throws ControllerAutomationException
      */
