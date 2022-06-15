@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $object_id
  * @property string|null $payload
  * @property string|null $object_before_action
+ * @property string|null $ip
  * @property-read string $created_at
  * @property-read string $updated_at
  */

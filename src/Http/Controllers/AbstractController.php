@@ -578,6 +578,7 @@ class AbstractController extends Controller
         $statistic->object_id = $objectId;
         $statistic->payload = $payload;
         $statistic->object_before_action = $objectBeforeAction;
+        $statistic->ip = \request()->ip();
         $statistic->save();
     }
 
