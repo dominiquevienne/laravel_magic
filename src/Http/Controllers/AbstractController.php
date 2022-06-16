@@ -563,8 +563,10 @@ class AbstractController extends Controller
             $userId = $user->id;
         }
 
+        $path = null;
         $payload = null;
         if ($request instanceof Request) {
+            $path = $request->path();
             $payload = json_encode($request->all());
         }
         $objectId = null;
@@ -577,6 +579,7 @@ class AbstractController extends Controller
         $statistic = new Statistic();
         $statistic->model_name = $this->modelName;
         $statistic->feature_slug = $featureSlug;
+        $statistic->path = $path;
         $statistic->user_id = $userId;
         $statistic->object_id = $objectId;
         $statistic->payload = $payload;

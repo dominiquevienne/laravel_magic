@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read int $id
  * @property string $model_name
  * @property string $feature_slug
- * @property int $user_id
+ * @property string|null $path
+ * @property int|null $user_id
  * @property int|null $object_id
  * @property string|null $payload
  * @property string|null $object_before_action
@@ -22,10 +23,12 @@ class Statistic extends AbstractModel
     protected $fillable = [
         'model_name',
         'feature_slug',
+        'path',
         'user_id',
         'object_id',
         'payload',
-        'object_before_action'
+        'object_before_action',
+        'ip',
     ];
 
 
