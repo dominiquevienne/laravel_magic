@@ -436,7 +436,7 @@ class AbstractController extends Controller
     public function store(BootstrapRequest $request): Response
     {
         $this->recordCall(
-            _METHOD__,
+            __METHOD__,
             $request
         );
 
