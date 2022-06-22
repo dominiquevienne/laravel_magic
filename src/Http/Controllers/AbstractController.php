@@ -130,12 +130,12 @@ class AbstractController extends Controller
     }
 
     /**
-     * @param AbstractModel|Collection|LengthAwarePaginator $items
+     * @param AbstractModel|Collection|LengthAwarePaginator|null $items
      * @param array $meta
      * @return Response
      * @todo Implement metadata feature
      */
-    protected function sendResponse(AbstractModel|Collection|LengthAwarePaginator $items, array $meta = []): Response
+    protected function sendResponse(AbstractModel|Collection|LengthAwarePaginator|null $items, array $meta = []): Response
     {
         $meta['http-status'] = $meta['http-status'] ?? 200;
         $meta['result'] = $meta['result'] ?? ($meta['http-status']===200);
