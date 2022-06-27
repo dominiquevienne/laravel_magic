@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Routing\Controller;
 use Dominiquevienne\LaravelMagic\Exceptions\ControllerAutomationException;
 use Dominiquevienne\LaravelMagic\Http\Requests\BootstrapRequest;
@@ -589,12 +590,16 @@ class AbstractController extends Controller
     }
 
     /**
+     * @todo Give the opportunity to pass page name parameter
+     * @todo Give the opportunity to pass page number
      * @param Builder $query
      * @return string
      */
     protected function makeQueryFingerPrint(Builder $query): string
     {
-        $queryString = $query->toSql() . '-' . implode('_', $query->getBindings());
+        $queryString = $query->toSql() . '-' .
+            Paginator::resolveCurrentPage() . '.' .
+            implode('_', $query->getBindings());
 
         return Str::slug($queryString);
     }
