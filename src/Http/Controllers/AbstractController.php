@@ -3,12 +3,12 @@
 namespace Dominiquevienne\LaravelMagic\Http\Controllers;
 
 use Dominiquevienne\LaravelMagic\Http\Filters\GenericFilter;
+use Dominiquevienne\LaravelMagic\Services\QueryService;
 use Dominiquevienne\LaravelMagic\Traits\ClassSuggestion;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Routing\Controller;
 use Dominiquevienne\LaravelMagic\Exceptions\ControllerAutomationException;
 use Dominiquevienne\LaravelMagic\Http\Requests\BootstrapRequest;
@@ -234,7 +234,7 @@ class AbstractController extends Controller
             $query = $query->orderBy($tableMain . '.' . trim($this->sortingKey), $this->sortingDirection);
         }
 
-        $queryFingerprint = $this->makeQueryFingerPrint($query);
+        $queryFingerprint = QueryService::makeQueryFingerPrint($query);
 
         $items = null;
         if ($this->cacheDuration !== 0) {
@@ -297,7 +297,7 @@ class AbstractController extends Controller
         }
 
         try {
-            $queryFingerprint = $this->makeQueryFingerPrint($query);
+            $queryFingerprint = QueryService::makeQueryFingerPrint($query);
 
             $item = null;
             if ($this->cacheDuration !== 0) {
@@ -587,21 +587,6 @@ class AbstractController extends Controller
         $statistic->object_before_action = $objectBeforeAction;
         $statistic->ip = \request()->ip();
         $statistic->save();
-    }
-
-    /**
-     * @todo Give the opportunity to pass page name parameter
-     * @todo Give the opportunity to pass page number
-     * @param Builder $query
-     * @return string
-     */
-    protected function makeQueryFingerPrint(Builder $query): string
-    {
-        $queryString = $query->toSql() . '-' .
-            Paginator::resolveCurrentPage() . '.' .
-            implode('_', $query->getBindings());
-
-        return Str::slug($queryString);
     }
 
     /**
